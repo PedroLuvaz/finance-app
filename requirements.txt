@@ -1,0 +1,11 @@
+# Dependências do Controle de Finanças
+
+# Interface Gráfica Moderna
+customtkinter>=5.2.0
+
+# Automação Web (para futuras integrações)
+selenium>=4.15.0
+webdriver-manager>=4.0.1
+
+# Utilitários
+Pillow>=10.0.0
