@@ -13,17 +13,20 @@ def formatar_moeda(valor: float) -> str:
     return f"R$ {valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
 
-def formatar_data(data: Optional[str], 
+def formatar_data(data, 
                    formato_origem: str = FORMATO_DATA_DB,
                    formato_destino: str = FORMATO_DATA_BR) -> str:
     """Converte data entre formatos."""
     if not data:
         return ""
     try:
+        # Se já for datetime, usar diretamente
+        if isinstance(data, datetime):
+            return data.strftime(formato_destino)
         dt = datetime.strptime(data, formato_origem)
         return dt.strftime(formato_destino)
     except ValueError:
-        return data
+        return str(data)
 
 
 def formatar_data_db(data: Optional[str]) -> Optional[str]:

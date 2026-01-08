@@ -128,14 +128,16 @@ class ContaService:
     
     def _criar_conta_parcelada(self, dados: DadosConta) -> ResultadoOperacao:
         """
-        Cria uma conta parcelada gerando automaticamente todas as parcelas.
+        Cria uma conta parcelada gerando automaticamente as parcelas futuras.
+        Se a parcela_atual for maior que 1 (ex: 3/7), começa gerando a partir da 
+        parcela atual e cria apenas as parcelas restantes (3/7, 4/7, 5/7, 6/7, 7/7).
         Cada parcela é criada para o mês seguinte com a mesma divisão.
         """
         # Gerar ID único para o grupo de parcelas
         grupo_id = str(uuid4())
         
-        # Calcular valor de cada parcela
-        valor_parcela = dados.valor_total / dados.total_parcelas
+        # Calcular valor de cada parcela (valor_total já é o valor da parcela individual)
+        valor_parcela = dados.valor_total
         
         # Data base para vencimento
         if dados.data_vencimento:
@@ -151,11 +153,16 @@ class ContaService:
         
         contas_criadas = []
         
-        # Criar cada parcela
-        for i in range(dados.total_parcelas):
-            parcela_num = i + 1
+        # Determinar a partir de qual parcela começar
+        # Se dados.parcela_atual = 3 e total = 7, criamos 3, 4, 5, 6, 7
+        parcela_inicial = dados.parcela_atual
+        parcelas_a_criar = dados.total_parcelas - parcela_inicial + 1
+        
+        # Criar cada parcela a partir da parcela atual
+        for i in range(parcelas_a_criar):
+            parcela_num = parcela_inicial + i
             
-            # Calcular data de vencimento (adiciona meses)
+            # Calcular data de vencimento (adiciona meses a partir da data base)
             data_vencimento = data_base + relativedelta(months=i)
             
             # Criar a conta/parcela
@@ -181,13 +188,21 @@ class ContaService:
                 )
                 self._criar_divisoes(conta_id, divisoes_parcela)
         
+        # Mensagem informativa sobre as parcelas geradas
+        if parcela_inicial > 1:
+            mensagem = f"Conta parcelada criada! {parcelas_a_criar} parcelas geradas ({parcela_inicial}/{dados.total_parcelas} até {dados.total_parcelas}/{dados.total_parcelas})."
+        else:
+            mensagem = f"Conta parcelada criada com sucesso! {dados.total_parcelas} parcelas geradas."
+        
         return ResultadoOperacao(
             True,
-            f"Conta parcelada criada com sucesso! {dados.total_parcelas} parcelas geradas.",
+            mensagem,
             {
                 'grupo_id': grupo_id,
                 'contas_ids': contas_criadas,
-                'total_parcelas': dados.total_parcelas
+                'total_parcelas': dados.total_parcelas,
+                'parcela_inicial': parcela_inicial,
+                'parcelas_criadas': parcelas_a_criar
             }
         )
     

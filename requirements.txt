@@ -10,3 +10,10 @@ webdriver-manager>=4.0.1
 # Utilitários
 Pillow>=10.0.0
 python-dateutil>=2.8.2
+
+# Importação de Faturas (Excel/CSV)
+openpyxl>=3.1.0
+pandas>=2.0.0
+
+# Build
+pyinstaller>=6.0.0

@@ -8,7 +8,9 @@ from datetime import datetime
 
 from .components import Card, ActionButton, ConfirmDialog
 from .dialogs import DialogoPessoa, DialogoConta, DialogoExcluirParcelas
+from .dialogo_importacao import DialogoImportacao
 from src.services import ContaService, PessoaService, RelatorioService
+from src.services.importacao_service import ImportacaoService
 from src.services.conta_service import DadosConta
 from src.utils.formatters import formatar_moeda, formatar_data
 from src.config.constants import MESES
@@ -271,6 +273,15 @@ class ContasPage(BasePage):
             width=140,
             height=40,
             command=self._adicionar_conta
+        ).pack(side="right", padx=(5, 0))
+        
+        ActionButton(
+            header,
+            text="📥 Importar",
+            style="primary",
+            width=120,
+            height=40,
+            command=self._importar_fatura
         ).pack(side="right")
         
         # Filtros
@@ -510,6 +521,18 @@ class ContasPage(BasePage):
         self.conta_service.marcar_paga(conta['id'])
         self.carregar()
         self.app.atualizar_dashboard()
+    
+    def _importar_fatura(self):
+        """Abre o diálogo de importação de fatura."""
+        categorias = self.conta_service.listar_categorias()
+        pessoas = self.pessoa_service.listar_todas()
+        
+        dialog = DialogoImportacao(self.app, categorias, pessoas)
+        result = dialog.show()
+        
+        if result:
+            self.carregar()
+            self.app.atualizar_dashboard()
 
 
 class PessoasPage(BasePage):
