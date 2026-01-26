@@ -4,7 +4,7 @@ Suporta importação de arquivos XLS/XLSX de diferentes bancos.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional, Dict, Any, Protocol
 from pathlib import Path
 from abc import ABC, abstractmethod
@@ -497,20 +497,27 @@ class ImportacaoService:
         
         for transacao in transacoes:
             try:
-                # Ajusta valor total e flag de geração automática para parcelados
-                valor_final = transacao.valor
-                gerar_futuras = gerar_parcelas_futuras
+                # O valor da transação importada já é o valor da parcela/fatura
+                # Não devemos multiplicar pelo total de parcelas, pois o ContaService
+                # espera o valor da parcela individual para contas parceladas.
                 
-                if transacao.eh_parcelada:
-                    valor_final = transacao.valor * transacao.total_parcelas
-                    gerar_futuras = True
+                # Só geramos parcelas futuras se o usuário solicitou E a transação é parcelada
+                gerar_futuras = gerar_parcelas_futuras and transacao.eh_parcelada
+                
+                # Converter data para string no formato esperado (YYYY-MM-DD)
+                data_vencimento_str = None
+                if isinstance(transacao.data, (datetime, date)):
+                    data_vencimento_str = transacao.data.strftime('%Y-%m-%d')
+                else:
+                    # Tenta usar como string ou pega data atual se falhar
+                    data_vencimento_str = str(transacao.data) if transacao.data else datetime.now().strftime('%Y-%m-%d')
                 
                 dados = DadosConta(
                     descricao=transacao.descricao,
-                    valor_total=valor_final,
+                    valor_total=transacao.valor,
                     parcela_atual=transacao.parcela_atual,
                     total_parcelas=transacao.total_parcelas,
-                    data_vencimento=transacao.data,
+                    data_vencimento=data_vencimento_str,
                     categoria_id=categoria_id,
                     gerar_parcelas_futuras=gerar_futuras,
                     divisoes=divisoes or []

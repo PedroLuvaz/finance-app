@@ -467,7 +467,11 @@ class MainWindow(ctk.CTk):
         # Lista de contas
         self.lista_contas_frame = ctk.CTkScrollableFrame(self.main_area)
         self.lista_contas_frame.grid(row=2, column=0, sticky="nsew")
+        # Garantir que apenas a linha 2 (lista) expanda para ocupar o espaço disponível.
+        self.main_area.grid_rowconfigure(0, weight=0)
+        self.main_area.grid_rowconfigure(1, weight=0)
         self.main_area.grid_rowconfigure(2, weight=1)
+        self.main_area.grid_columnconfigure(0, weight=1)
         
         self.carregar_lista_contas()
 
